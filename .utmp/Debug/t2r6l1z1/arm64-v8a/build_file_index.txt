@@ -1,0 +1,3 @@
+/mnt/Yenibirim/Unity Projeleri/Mobil Deneme/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/CMakeLists.txt
+/mnt/Yenibirim/Unity Projeleri/Mobil Deneme/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/FramePacing/CMakeLists.txt
+/mnt/Yenibirim/Unity Projeleri/Mobil Deneme/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/CMakeLists.txt
