@@ -1,1 +1,0 @@
-/mnt/Yenibirim/Unity Projeleri/Mobil Deneme/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/Debug/t2r6l1z1/obj/arm64-v8a
