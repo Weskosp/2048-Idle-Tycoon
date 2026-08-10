@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GridManager : MonoBehaviour
@@ -17,16 +18,18 @@ public class GridManager : MonoBehaviour
         BU FORMÜLLERİ UNUTMA!!!!
     */
 
+    [SerializeField] private int _categoryID;
+    [SerializeField] private int _cardID;
     [SerializeField] private int _blockCount;
     [SerializeField] private int _baseBlockValue;
     [SerializeField] private float _blockMoveSpeed;
     [SerializeField] private List<GameObject> _gridCells = new List<GameObject>();
 
     public enum Direction {Up, Down, Left, Right};
-    private int[,] _gridData;
     private int _totalScore;
     private bool isSwipe;
 
+    private SaveManager _saveManager;
     private LevelSettings _levelSettings;
     private GridGenerator _gridGenerator;
     private GameObject _blockPrefab;
@@ -34,13 +37,41 @@ public class GridManager : MonoBehaviour
 
     void Start()
     {
+        _categoryID = MainManager.CategoryID;
+        _cardID = MainManager.CardID;
+
+        _saveManager = GetComponent<SaveManager>();
         _gridGenerator = GetComponent<GridGenerator>();
+        _levelSettings = GetComponent<LevelSettings>();
         _blockPrefab = transform.Find("Block").gameObject;
         _scoreObject = transform.Find("Score").gameObject;
-        _gridData = new int[_gridGenerator.RowValue, _gridGenerator.ColumnValue];
-        _levelSettings = GetComponent<LevelSettings>();
 
-        AddBlockToGrid();
+        LoadLevelData(_saveManager.LoadLevelData(_categoryID, _cardID));
+    }
+
+    public void BackMenu()
+    {
+        SaveLevel();
+        SceneManager.LoadScene("Main");
+    }
+
+    public void SaveLevel()
+    {
+        List<int> cellIndex = new List<int>(16);
+        List<int> blockValues = new List<int>(16);
+
+        for (int i = 0; i < _gridCells.Count; i++)
+        {
+            if(_gridCells[i].transform.childCount != 0)
+            {
+                BlockData blockData = _gridCells[i].transform.GetChild(0).GetComponent<BlockData>();
+                
+                cellIndex.Add(i);
+                blockValues.Add(blockData.BlockValue);
+            }
+        }
+
+        _saveManager.SaveLevel(_categoryID, _cardID, _totalScore, cellIndex, blockValues);
     }
 
     public void AddCellPositionToList(GameObject cell)
@@ -48,19 +79,31 @@ public class GridManager : MonoBehaviour
         _gridCells.Add(cell);
     }
 
-    public void AddBlockToGrid()
+    void LoadLevelData(LevelData levelData)
     {
-        RandomGridDataGenerator();
+        if (levelData.filledCells == null)
+        {
+            RandomGridDataGenerator();
+            return;
+        }
+
+        for (int i = 0; i < levelData.filledCells.Count; i++)
+        {
+            AddBlock(levelData.filledCells[i], levelData.blockValues[i], true);
+        }
     }
 
-    void AddBlock(int cellIndex, int blockValue)
+    void AddBlock(int cellIndex, int blockValue, bool isColorful)
     {
         GameObject newBlock = Instantiate(_blockPrefab, _gridCells[cellIndex].transform, false);
+        BlockData blockData = newBlock.GetComponent<BlockData>();
 
         newBlock.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
         newBlock.GetComponentInChildren<TextMeshProUGUI>().text = blockValue.ToString();
-        newBlock.GetComponent<BlockData>().BlockValue = blockValue;
-        newBlock.GetComponent<BlockData>().CurrentIndex = cellIndex;
+        blockData.BlockValue = blockValue;
+        blockData.CurrentIndex = cellIndex;
+
+        if(isColorful) BlockMultiplier(blockData);
 
         StartCoroutine(PopEffect(newBlock, Vector2.one, 0.2f));
         AddToScore(newBlock);
@@ -79,20 +122,8 @@ public class GridManager : MonoBehaviour
 
             if (emptyGridCells.Count == 0) continue;  
             int randomIndex = Random.Range(0, emptyGridCells.Count);
-            if (_gridCells[emptyGridCells[randomIndex]].transform.childCount == 0) AddBlock(emptyGridCells[randomIndex], _baseBlockValue);
+            if (_gridCells[emptyGridCells[randomIndex]].transform.childCount == 0) AddBlock(emptyGridCells[randomIndex], _baseBlockValue, false);
         }
-    }
-
-    void ManuelGridDataGenerator()
-    {
-        _gridData[0,0] = 4;
-        _gridData[1,0] = 2;
-        _gridData[2,0] = 0;
-        _gridData[3,0] = 2;
-        _gridData[0,1] = 4;
-        _gridData[1,1] = 2;
-        _gridData[2,1] = 0;
-        _gridData[3,1] = 2;
     }
 
     public void MoveGrid(Direction direction)
