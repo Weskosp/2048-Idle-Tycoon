@@ -6,6 +6,8 @@ UserSettings/
 Obj/
 Build/
 Builds/
+Assets/02_Textures/
+Assets/02_Textures.meta/
 *.tmp
 
 # Visual Studio / VS Code

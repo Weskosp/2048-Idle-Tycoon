@@ -81,7 +81,7 @@ public class GridManager : MonoBehaviour
 
     void LoadLevelData(LevelData levelData)
     {
-        if (levelData.filledCells == null)
+        if (levelData.filledCells.Count == 0)
         {
             RandomGridDataGenerator();
             return;
@@ -98,10 +98,10 @@ public class GridManager : MonoBehaviour
         GameObject newBlock = Instantiate(_blockPrefab, _gridCells[cellIndex].transform, false);
         BlockData blockData = newBlock.GetComponent<BlockData>();
 
-        newBlock.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
-        newBlock.GetComponentInChildren<TextMeshProUGUI>().text = blockValue.ToString();
         blockData.BlockValue = blockValue;
         blockData.CurrentIndex = cellIndex;
+        newBlock.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+        newBlock.GetComponentInChildren<TextMeshProUGUI>().text = FormatNumber(blockData.BlockValue);
 
         if(isColorful) BlockMultiplier(blockData);
 
@@ -169,7 +169,7 @@ public class GridManager : MonoBehaviour
                                 blockData.BlockValue = -1; 
                                 blockData2.IsMerge = true;
 
-                                columnBlocks[k + 1].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = blockData2.BlockValue.ToString();
+                                columnBlocks[k + 1].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = FormatNumber(blockData2.BlockValue);
                             }
                         }
 
@@ -230,7 +230,7 @@ public class GridManager : MonoBehaviour
                                 blockData.BlockValue = -1; 
                                 blockData2.IsMerge = true;
 
-                                columnBlocks[k - 1].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = blockData2.BlockValue.ToString();
+                                columnBlocks[k - 1].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = FormatNumber(blockData2.BlockValue);
                             }
                         }
 
@@ -291,7 +291,7 @@ public class GridManager : MonoBehaviour
                                 blockData.BlockValue = -1; 
                                 blockData2.IsMerge = true;
 
-                                rowBlocks[k + 1].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = blockData2.BlockValue.ToString();
+                                rowBlocks[k + 1].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = FormatNumber(blockData2.BlockValue);
                             }
                         }
 
@@ -356,7 +356,7 @@ public class GridManager : MonoBehaviour
                                 blockData.BlockValue = -1; 
                                 blockData2.IsMerge = true;
 
-                                rowBlocks[k - 1].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = blockData2.BlockValue.ToString();
+                                rowBlocks[k - 1].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = FormatNumber(blockData2.BlockValue);
                             }
                         }
 
@@ -422,54 +422,6 @@ public class GridManager : MonoBehaviour
         _scoreObject.GetComponent<TextMeshProUGUI>().text = _totalScore.ToString();
     }
 
-    private IEnumerator PopEffect(GameObject targetBlock ,Vector2 targetScale, float count)
-    {
-        RectTransform targetBlockRect = targetBlock.GetComponent<RectTransform>();
-        Vector2 startScale = Vector2.zero;
-        float elapsedTime = 0f;
-
-        while (elapsedTime < count)
-        {
-            elapsedTime += Time.deltaTime;
-
-            float t = elapsedTime / count;
-
-            // Lerp fonksiyonu gibi aynı mantığa sahip ama lerp gibi lineer(düz) hızla değil daha yumuşak şekilde değer geçişi yapar
-            float smoothTransition = Mathf.SmoothStep(0f, 1f, t);
-
-            targetBlockRect.localScale = Vector2.Lerp(startScale, targetScale, smoothTransition);
-
-            // Bir sonraki kareyi(frame) bekle 
-            yield return null;
-        }
-
-        // Döngü bittiğinde küsüratlı hataları önlemek için objeyi tam hedefe oturt
-        targetBlockRect.anchoredPosition = targetScale;
-    }
-
-    private IEnumerator MovingBlock(GameObject targetBlock , float count, int blockValue)
-    {
-        RectTransform targetBlockRect = targetBlock.GetComponent<RectTransform>();
-        Vector2 startScale = targetBlockRect.anchoredPosition;
-        float elapsedTime = 0f;
-
-        while (elapsedTime < count)
-        {
-            elapsedTime += Time.deltaTime;
-
-            float t = elapsedTime / count;
-            float smoothTransition = Mathf.SmoothStep(0f, 1f, t);
-
-            targetBlockRect.localPosition = Vector2.Lerp(startScale, Vector2.zero, smoothTransition);
-
-            yield return null;
-        }
-
-        targetBlockRect.anchoredPosition = Vector2.zero;
-        if (blockValue == -1) Destroy(targetBlock);
-        isSwipe = false;
-    }
-
     private void BlockMultiplier(BlockData blockData)
     {
         int blockLevel = (int)Mathf.Log(blockData.BlockValue / _baseBlockValue, 2);
@@ -532,5 +484,62 @@ public class GridManager : MonoBehaviour
         ColorUtility.TryParseHtmlString(hexValue, out renk);
 
         blockData.gameObject.GetComponent<Image>().color = renk;
+    }
+
+    private string FormatNumber(int numberValue)
+    {
+        if (numberValue >= 1000) return (numberValue / 1000f).ToString("0.#") + "K";
+        else if (numberValue >= 1000000) return (numberValue / 1000000f).ToString("0.#") + "M";
+        else if (numberValue >= 1000000000) return (numberValue / 1000000000f).ToString("0.#") + "B";
+        
+        return numberValue.ToString();
+    }
+
+    private IEnumerator PopEffect(GameObject targetBlock ,Vector2 targetScale, float count)
+    {
+        RectTransform targetBlockRect = targetBlock.GetComponent<RectTransform>();
+        Vector2 startScale = Vector2.zero;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < count)
+        {
+            elapsedTime += Time.deltaTime;
+
+            float t = elapsedTime / count;
+
+            // Lerp fonksiyonu gibi aynı mantığa sahip ama lerp gibi lineer(düz) hızla değil daha yumuşak şekilde değer geçişi yapar
+            float smoothTransition = Mathf.SmoothStep(0f, 1f, t);
+
+            targetBlockRect.localScale = Vector2.Lerp(startScale, targetScale, smoothTransition);
+
+            // Bir sonraki kareyi(frame) bekle 
+            yield return null;
+        }
+
+        // Döngü bittiğinde küsüratlı hataları önlemek için objeyi tam hedefe oturt
+        targetBlockRect.anchoredPosition = targetScale;
+    }
+
+    private IEnumerator MovingBlock(GameObject targetBlock , float count, int blockValue)
+    {
+        RectTransform targetBlockRect = targetBlock.GetComponent<RectTransform>();
+        Vector2 startScale = targetBlockRect.anchoredPosition;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < count)
+        {
+            elapsedTime += Time.deltaTime;
+
+            float t = elapsedTime / count;
+            float smoothTransition = Mathf.SmoothStep(0f, 1f, t);
+
+            targetBlockRect.localPosition = Vector2.Lerp(startScale, Vector2.zero, smoothTransition);
+
+            yield return null;
+        }
+
+        targetBlockRect.anchoredPosition = Vector2.zero;
+        if (blockValue == -1) Destroy(targetBlock);
+        isSwipe = false;
     }
 }

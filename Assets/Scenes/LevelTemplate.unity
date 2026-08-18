@@ -2734,8 +2734,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc56eaa8779f1779da1267540d1178ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridManager
-  _levelID: 0
-  _titleID: 0
+  _categoryID: 0
+  _cardID: 0
   _blockCount: 1
   _baseBlockValue: 2
   _blockMoveSpeed: 0.2
